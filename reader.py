@@ -17,7 +17,7 @@ def encontrar_assunto(pdf):
                 assunto.append(paragrafo)
 
     processo.close()
-
+    print(assunto[0])
     return assunto
 
 print(encontrar_assunto('ex01.pdf'))
