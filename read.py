@@ -1,5 +1,13 @@
+import pandas as pd
 import pytesseract
 from pdf2image import convert_from_path
+
+# Objeto Data Nome solicitante Prazo codigo Multa
+df = pd.DataFrame(columns=['PROTOCOLO', 'DATA DE ENTRADA', 'ORGÃO EMISSOR', 'INTERESSADO', 
+                           'NOME DO SERVIDOR OU INTERSSADO', 'ORIGEM', 'ASSUNTO', 'SUB-ASSUNTO', 
+                           'TIPO A SER ATENDIDO', 'OBJETO', 'PRAZO DE ATENDIMENTO', 'SE HÁ MULTA', 
+                           'STATUS', 'SETOR TRAMITADO', 'DATA DE SAÍDA', 'OBSERVAÇÃO', 'PRIORIDADE'])
+
 
 def extrair_texto_pdf_digitalizado(pdf_path):
     # Convertendo o PDF em imagens
@@ -13,27 +21,27 @@ def extrair_texto_pdf_digitalizado(pdf_path):
     
     return texto_completo
 
-def encontrar_paragrafos_chave(texto, palavras_chave):
-    paragrafos = texto.split('\n\n')  # Dividir o texto em parágrafos
-    paragrafos_encontrados = []
-    
-    for paragrafo in paragrafos:
-        for chave, palavra_chave in palavras_chave.items():
-            if palavra_chave in paragrafo.lower():
-                paragrafos_encontrados.append((chave, paragrafo))
-    
-    return paragrafos_encontrados
 
-# Exemplo de uso
-pdf_path = 'ex01.pdf'
+pdf_path = 'ex02.pdf'
 texto_extraido = extrair_texto_pdf_digitalizado(pdf_path)
-palavras_chave = {'Solicitando': 'ajuizada por ', 'Objeto': 'objeto a ', 'Prazo': 'solicito que sejam encaminhados'}
-paragrafos_chave = encontrar_paragrafos_chave(texto_extraido, palavras_chave)
+palavras_chave = {'NOME DO SERVIDOR OU INTERSSADO': ['ajuizada por ', '(CPF'],
+                   'OBJETO': ['objeto a ', '.'],
+                    'PRAZO DE ATENDIMENTO': ['sejam encaminhados', 'dias']}
 
-for i, (chave, paragrafo) in enumerate(paragrafos_chave, start=1):
-    print(f"{chave} {i}:")
-    print(paragrafo)
-    indice_ultima_ocorrencia = paragrafo.lower().rindex(palavras_chave[chave])
-    print(indice_ultima_ocorrencia)
+for chave in palavras_chave:
+    print(f"{chave}:")
+    primeira_ocorrencia = texto_extraido.lower().rindex(palavras_chave[chave][0]) + len(palavras_chave[chave][0])
+    ultima_ocorrencia = texto_extraido.find(palavras_chave[chave][1], primeira_ocorrencia)
+
+    if chave == 'PRAZO DE ATENDIMENTO':
+        dado = texto_extraido[primeira_ocorrencia:ultima_ocorrencia + 4]
+    else:
+        dado = texto_extraido[primeira_ocorrencia:ultima_ocorrencia]
+
+    print(dado)
     print("\n")
 
+    # Adicionando ao DataFrame
+    df[chave] = [dado]  # Você precisa passar uma lista para que cada valor seja atribuído a uma linha diferente
+
+df.to_excel('xxx.xlsx', index=False)
